@@ -1,4 +1,4 @@
-set :author, "ontoportal-lirmm"
+set :author, "ontoportal-astro"
 set :application, "ontologies_api"
 set :repo_url, "https://github.com/#{fetch(:author)}/#{fetch(:application)}.git"
 
@@ -8,7 +8,7 @@ set :deploy_via, :remote_cache
 # ask :branch, proc { `git rev-parse --abbrev-ref HEAD`.chomp }
 
 # Default deploy_to directory is /var/www/my_app
-set :deploy_to, "/srv/ontoportal/#{fetch(:application)}"
+set :deploy_to, "/opt/ontoportal/ontologies_api"
 
 # Default value for :scm is :git
 # set :scm, :git
@@ -38,31 +38,20 @@ set :config_folder_path, "#{fetch(:application)}/#{fetch(:stage)}"
 
 # If you want to restart using `touch tmp/restart.txt`, add this to your config/deploy.rb:
 
-SSH_JUMPHOST = ENV.include?('SSH_JUMPHOST') ? ENV['SSH_JUMPHOST'] : 'jumpbox.hostname.com'
-SSH_JUMPHOST_USER = ENV.include?('SSH_JUMPHOST_USER') ? ENV['SSH_JUMPHOST_USER'] : 'username'
+# SSH_JUMPHOST = ENV.include?('SSH_JUMPHOST') ? ENV['SSH_JUMPHOST'] : 'jumpbox.hostname.com'
+# SSH_JUMPHOST_USER = ENV.include?('SSH_JUMPHOST_USER') ? ENV['SSH_JUMPHOST_USER'] : 'username'
+# JUMPBOX_PROXY = "#{SSH_JUMPHOST_USER}@#{SSH_JUMPHOST}"
 
-JUMPBOX_PROXY = "#{SSH_JUMPHOST_USER}@#{SSH_JUMPHOST}"
 set :ssh_options, {
   user: 'ontoportal',
-  forward_agent: 'true',
   keys: %w(config/deploy_id_rsa),
   auth_methods: %w(publickey),
-  # use ssh proxy if API servers are on a private network
-  proxy: Net::SSH::Proxy::Command.new("ssh #{JUMPBOX_PROXY} -W %h:%p")
+  # forward_agent: 'true',
+  # proxy: Net::SSH::Proxy::Command.new("ssh #{JUMPBOX_PROXY} -W %h:%p")
 }
 
 # private git repo for configuraiton
 PRIVATE_CONFIG_REPO = ENV.include?('PRIVATE_CONFIG_REPO') ? ENV['PRIVATE_CONFIG_REPO'] : 'https://your_github_pat_token@github.com/your_organization/ontoportal-configs.git'
-desc "Check if agent forwarding is working"
-task :forwarding do
-  on roles(:all) do |h|
-    if test("env | grep SSH_AUTH_SOCK")
-      info "Agent forwarding is up to #{h}"
-    else
-      error "Agent forwarding is NOT up to #{h}"
-    end
-  end
-end
 
 # inspired by http://nathaniel.talbott.ws/blog/2013/03/14/post-deploy-smoke-tests/
 desc 'Run smoke test'
@@ -115,7 +104,7 @@ namespace :deploy do
     on roles(:app), in: :sequence, wait: 5 do
       # Your restart mechanism here, for example:
       # execute :touch, release_path.join('tmp/restart.txt')
-      execute 'sudo systemctl restart unicorn'
+      execute 'sudo systemctl restart unicorn.service'
       execute 'sleep 5'
     end
   end
