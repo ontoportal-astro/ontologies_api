@@ -31,7 +31,9 @@ set :linked_dirs, %w{log vendor/bundle tmp/pids tmp/sockets public/system}
 
 # Default value for default_env is {}
 # set :default_env, { path: "/opt/ruby/bin:$PATH" }
-
+set :default_env, {
+  'PATH' => "/usr/local/rbenv/shims:/usr/local/rbenv/bin:/usr/bin:$PATH"
+}
 # Default value for keep_releases is 5
 set :keep_releases, 5
 set :config_folder_path, "#{fetch(:application)}/#{fetch(:stage)}"
