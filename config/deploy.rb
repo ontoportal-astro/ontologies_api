@@ -8,7 +8,7 @@ set :deploy_via, :remote_cache
 # ask :branch, proc { `git rev-parse --abbrev-ref HEAD`.chomp }
 
 # Default deploy_to directory is /var/www/my_app
-set :deploy_to, "/opt/ontoportal/ontologies_api"
+set :deploy_to, "/opt/ontoportal/#{fetch(:application)}"
 
 # Default value for :scm is :git
 # set :scm, :git
@@ -30,13 +30,16 @@ append :linked_files, 'config/unicorn.rb', 'config/environments/appliance.rb', '
 set :linked_dirs, %w{log vendor/bundle tmp/pids tmp/sockets public/system}
 
 # Default value for default_env is {}
-# set :default_env, { path: "/opt/ruby/bin:$PATH" }
 set :default_env, {
   'PATH' => "/usr/local/rbenv/shims:/usr/local/rbenv/bin:/usr/bin:$PATH"
 }
+
 # Default value for keep_releases is 5
 set :keep_releases, 5
 set :config_folder_path, "#{fetch(:application)}/#{fetch(:stage)}"
+
+# set bundle options
+set :bundle_flags, "--verbose"
 
 # If you want to restart using `touch tmp/restart.txt`, add this to your config/deploy.rb:
 
@@ -46,9 +49,9 @@ set :config_folder_path, "#{fetch(:application)}/#{fetch(:stage)}"
 
 set :ssh_options, {
   user: 'ontoportal',
+  # forward_agent: 'true',
   # keys: %w(config/deploy_id_rsa),
   # auth_methods: %w(publickey),
-  # forward_agent: 'true',
   # proxy: Net::SSH::Proxy::Command.new("ssh #{JUMPBOX_PROXY} -W %h:%p")
 }
 
@@ -114,9 +117,11 @@ namespace :deploy do
   after :publishing, :restart
   after :restart, :clear_cache 
 
+  desc 'Clear the cache'
   task :clear_cache do
     on roles(:app), in: :sequence, wait: 5 do
         execute 'sudo opclearcaches'
     end
   end
+
 end
